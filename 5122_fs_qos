@@ -1,0 +1,33 @@
+1.2.2	Packet Data QoS
+//报文QoS保证
+[Ingress QoS和Egress QoS，侧重于整体芯片QoS描述。 ]
+1.2.2.1	Ingress  QoS（王锦）
+1.2.2.1.1	Ingress Resource Manager
+1.2.2.1.1.1	IRM based on Cell
+基于Input Channel，Input Port，Port Group 和Global四个维度统计占用的Cell资源，每个维度（Global 除外）都可配反压置位和撤销水线，每个维度还可以基于优先级配置丢弃水线，共支持4个优先级。当统计的Cell资源占用超过或低于相应的水线后，便会产生基于对应维度的反压置位，反压撤销或丢弃动作。举例: a、如果Input Channel 10的反压水线是128，当接收到某Cell后该Channel的占用Cell超过128时将触发Channel 10的反压；b、如果Input Port 2的优先级0的丢弃水线是512，当接收到优先级为0的报文首Cell时该Input Port的占用Cell 超过512时，将会触发该优先级0报文的丢弃。
+1.2.2.1.1.2	IRM based on PAC_ID
+基于Input Channel，Input Port，Port Group 和Global四个维度统计占用的PAC_ID资源，每个维度都可配反压置位和撤销水线。当统计的PAC_ID资源占用超过或低于相应的水线后，便会产生基于对应维度的反压置位，反压撤销或丢弃动作。举例: a、如果Input Channel 10的反压水线是128，当分配PAC_ID后该Channel的占用PAC_ID超过128时将触发对Channel 10的反压；b、如果Input Port 2的反压水线是512，当接分配PAC_ID后该Input Port的占用PAC_ID超过512时，将会触发对该端口的反压。
+1.2.2.1.2	Scheduling Before Processing
+1.2.2.1.2.1	Non-Priority Mode
+报文在上交Atom进行处理之前，支持基于Order Flow Channel队列的层次化调度。非优先级模式，支持2级调度。Atom Group内部支持WRR调度，Atom Group之间支持WFQ调度，如下图所示。
+
+
+1.2.2.1.2.2	Priority Mode
+报文在上交Atom进行处理之前，支持基于Order Flow Channel队列的层次化调度。优先级模式，支持3级调度。Atom Group内部支持低优先级队列或高优先级队列之间支持WRR调度，高低优先级队列组之间支持SP调度，Atom Group之间支持WFQ调度，如下图所示
+
+
+1.2.2.1.3	Scheduling After Processing
+报文在Atom处理之后，支持基于缓存位置和优先级的层次化调度。EFB或IFB的优先级队列之间支持DWRR调度，IFB和EFB队列组以及Dispatch Discard队列和Reassembly Discard队列之间支持DWRR调度，如下图所示。
+
+
+1.2.2.2	Egress  QoS（丁德宏）
+QSE模块提供PQ、VI、GQ、SQ、FQ的五级流队列调度。
+•	支持20K个FQ。前17K个FQ有两个Shaper，分别对应PIR和CIR流量，其余的3K个FQ不需要 Shaper。
+•	支持2176个 MQ，与前2176个SQ一一对应，可配置每个SQ下哪些FQ进入到MQ中。
+•	支持5248个 SQ。前2176个SQ可以调度8个FQ，SQ下属的FQ编号固定，8个FQ根据配置映射到SQ下的四个优先级组中，组间固定为SP调度，组内根据配置支持SP/DWRR调度；后3072个SQ下面固定只有1个FQ。每个SQ对应两个Shaper，分别对应PIR和CIR流量。
+•	支持2176个GQ。每个GQ最多可以调度5248个SQ，映射关系可配置。GQ下支持四个优先级子队列，子队列间固定SP调度，子队列内的SQ间支持DWRR调度。每个GQ对应两个Shaper，分别对应PIR和CIR流量。
+•	支持512个VI。每个VI最多可以调度2176个GQ，映射关系可配置。VI下支持四个优先级子队列，子队列间固定SP调度，子队列内的GQ间支持DWRR调度。每个VI对应两个Shaper，分别对应PIR和CIR流量。
+•	支持96个PQ。每个PQ最多可以调度512个VI，映射关系可配置。PQ下支持四个优先级子队列，子队列间固定SP调度，子队列内的VI间支持DWRR调度。每个PQ对应一个Shaper。PQ可以响应来自Channel的反压。
+•	96个PQ之间SP+SRR调度，即组间SP调度，组内SRR调度，最小调度间隔可配置。
+
+
